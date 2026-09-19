@@ -209,10 +209,29 @@ fun CalculatorScreen(vm: RideViewModel) {
                         Modifier.padding(top = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        NumField("Mileage (km/L)", input.mileage) { v -> vm.update { it.copy(mileage = v) } }
-                        NumField("Commission (%)", input.commissionPct) { v -> vm.update { it.copy(commissionPct = v) } }
-                        NumField("Fuel price (Rs/L)", input.fuelPrice) { v -> vm.update { it.copy(fuelPrice = v) } }
-                        Text(
+NumField(
+    label = "Mileage (km/L)",
+    value = input.mileage,
+    onChange = { value ->
+        vm.update { it.copy(mileage = value) }
+    }
+)
+
+NumField(
+    label = "Commission (%)",
+    value = input.commissionPct,
+    onChange = { value ->
+        vm.update { it.copy(commissionPct = value) }
+    }
+)
+
+NumField(
+    label = "Fuel price (Rs/L)",
+    value = input.fuelPrice,
+    onChange = { value ->
+        vm.update { it.copy(fuelPrice = value) }
+    }
+)                        Text(
                             "These stay between rides.",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
