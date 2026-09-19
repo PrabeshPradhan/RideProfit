@@ -97,7 +97,6 @@ fun CalculatorScreen(vm: RideViewModel) {
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // PRIMARY
         Card(
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(
@@ -108,28 +107,14 @@ fun CalculatorScreen(vm: RideViewModel) {
                 Modifier.padding(14.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                NumField(
-                    label = "Km to pickup",
-                    value = input.kmToPickup,
-                    onChange = { v -> vm.update { it.copy(kmToPickup = v) } }
-                )
-                NumField(
-                    label = "Km to destination",
-                    value = input.kmToDestination,
-                    onChange = { v -> vm.update { it.copy(kmToDestination = v) } }
-                )
-                NumField(
-                    label = "Fare (Rs)",
-                    value = input.fare,
-                    onChange = { v -> vm.update { it.copy(fare = v) } }
-                )
+                NumField("Km to pickup", input.kmToPickup) { v -> vm.update { it.copy(kmToPickup = v) } }
+                NumField("Km to destination", input.kmToDestination) { v -> vm.update { it.copy(kmToDestination = v) } }
+                NumField("Fare (Rs)", input.fare) { v -> vm.update { it.copy(fare = v) } }
             }
         }
 
-        // RESULT
         LiveResultCard(result)
 
-        // ACTIONS
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -163,7 +148,6 @@ fun CalculatorScreen(vm: RideViewModel) {
             }
         }
 
-        // SECONDARY
         Card(
             shape = RoundedCornerShape(18.dp),
             colors = CardDefaults.cardColors(
@@ -180,20 +164,14 @@ fun CalculatorScreen(vm: RideViewModel) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.Tune,
-                        null,
-                        Modifier.size(20.dp),
+                        Icons.Filled.Tune, null, Modifier.size(20.dp),
                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                     )
                     Spacer(Modifier.width(8.dp))
                     Column(Modifier.weight(1f)) {
+                        Text("Vehicle defaults", fontWeight = FontWeight.SemiBold, fontSize = 15.sp)
                         Text(
-                            "Vehicle defaults",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 15.sp
-                        )
-                        Text(
-                            "${input.mileage} km/L • ${input.commissionPct}% • Rs ${input.fuelPrice}/L",
+                            "${input.mileage} km/L, ${input.commissionPct}%, Rs ${input.fuelPrice}/L",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                         )
@@ -209,33 +187,9 @@ fun CalculatorScreen(vm: RideViewModel) {
                         Modifier.padding(top = 10.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-NumField(
-    label = "Mileage (km/L)",
-    value = input.mileage,
-    onChange = { value ->
-        vm.update { it.copy(mileage = value) }
-    }
-)
-
-NumField(
-    label = "Commission (%)",
-    value = input.commissionPct,
-    onChange = { value ->
-        vm.update { it.copy(commissionPct = value) }
-    }
-)
-
-NumField(
-    label = "Fuel price (Rs/L)",
-    value = input.fuelPrice,
-    onChange = { value ->
-        vm.update { it.copy(fuelPrice = value) }
-    }
-)                        Text(
-                            "These stay between rides.",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
+                        NumField("Mileage (km/L)", input.mileage) { v -> vm.update { it.copy(mileage = v) } }
+                        NumField("Commission (%)", input.commissionPct) { v -> vm.update { it.copy(commissionPct = v) } }
+                        NumField("Fuel price (Rs/L)", input.fuelPrice) { v -> vm.update { it.copy(fuelPrice = v) } }
                     }
                 }
             }
@@ -245,12 +199,7 @@ NumField(
 }
 
 @Composable
-fun NumField(
-    label: String,
-    value: String,
-    onChange: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun NumField(label: String, value: String, onChange: (String) -> Unit) {
     OutlinedTextField(
         value = value,
         onValueChange = { s ->
@@ -259,7 +208,7 @@ fun NumField(
         label = { Text(label) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        modifier = modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp)
     )
 }
@@ -273,9 +222,9 @@ fun LiveResultCard(r: CalcResult) {
         else -> MaterialTheme.colorScheme.error
     }
     val verdictText = when {
-        !r.valid -> "Enter fare & distance"
+        !r.valid -> "Enter fare and distance"
         worth -> "TAKE IT"
-        else -> "SKIP — no profit"
+        else -> "SKIP - no profit"
     }
 
     val animatedProfit by animateFloatAsState(
@@ -295,12 +244,7 @@ fun LiveResultCard(r: CalcResult) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                verdictText,
-                color = verdictColor,
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp
-            )
+            Text(verdictText, color = verdictColor, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             Text(
                 "Rs ${"%.2f".format(animatedProfit)}",
                 fontWeight = FontWeight.Bold,
@@ -387,7 +331,7 @@ fun EarningsScreen(vm: RideViewModel) {
                     color = if (totalProfit >= 0) Color(0xFF2E9E6B) else MaterialTheme.colorScheme.error
                 )
                 Text(
-                    "Net earnings • ${period.name.lowercase()}",
+                    "Net earnings, ${period.name.lowercase()}",
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
