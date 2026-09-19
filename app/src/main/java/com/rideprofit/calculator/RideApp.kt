@@ -502,4 +502,3 @@ fun RecordRow(r: RideRecord) {
         }
     }
 }
-        
