@@ -474,25 +474,32 @@ fun RecordRow(r: RideRecord) {
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    if (r.netProfit >= 0) Icons.Filled.TrendingUp else Icons.Filled.TrendingDown,
-                    null,
-                    tint = if (r.netProfit >= 0) Color(0xFF2E9E6B) else MaterialTheme.colorScheme.error
+                    imageVector = if (r.netProfit >= 0)
+                        Icons.Filled.TrendingUp else Icons.Filled.TrendingDown,
+                    contentDescription = null,
+                    tint = if (r.netProfit >= 0)
+                        Color(0xFF2E9E6B) else MaterialTheme.colorScheme.error
                 )
             }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text(fmt.format(Date(r.timestamp)), fontWeight = FontWeight.Medium)
                 Text(
-                    "%.1f km • Fare Rs %.0f".format(r.distance, r.fare),
+                    text = fmt.format(Date(r.timestamp)),
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    text = "%.1f km - Fare Rs %.0f".format(r.distance, r.fare),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
                 )
             }
             Text(
-                "Rs %.2f".format(r.netProfit),
+                text = "Rs %.2f".format(r.netProfit),
                 fontWeight = FontWeight.Bold,
-                color = if (r.netProfit >= 0) Color(0xFF2E9E6B) else MaterialTheme.colorScheme.error
+                color = if (r.netProfit >= 0)
+                    Color(0xFF2E9E6B) else MaterialTheme.colorScheme.error
             )
         }
     }
 }
+        
