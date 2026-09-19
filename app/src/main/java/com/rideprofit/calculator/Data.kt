@@ -5,12 +5,15 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.Calendar
+import java.util.UUID
 
 data class RideRecord(
+    val id: String,
     val timestamp: Long,
     val fare: Double,
     val netProfit: Double,
@@ -20,7 +23,18 @@ data class RideRecord(
 data class Defaults(
     val mileage: String,
     val commissionPct: String,
-    val fuelPrice: String
+    val fuelPrice: String,
+    val minPerKm: String
+)
+
+data class Snap(
+    val dark: Boolean,
+    val mileage: String,
+    val commissionPct: String,
+    val fuelPrice: String,
+    val minPerKm: String,
+    val goal: Double,
+    val goalBase: Double
 )
 
 val Context.dataStore by preferencesDataStore("ride_prefs")
@@ -31,6 +45,7 @@ class RideRepository(private val context: Context) {
     private val mileageKey = stringPreferencesKey("mileage")
     private val commKey = stringPreferencesKey("commission")
     private val fuelKey = stringPreferencesKey("fuel")
+    private val minPerKmKey = stringPreferencesKey("min_per_km")
     private val goalKey = stringPreferencesKey("goal")
     private val goalBaseKey = stringPreferencesKey("goal_base")
 
@@ -40,37 +55,34 @@ class RideRepository(private val context: Context) {
         (0 until arr.length()).map { i ->
             val o = arr.getJSONObject(i)
             RideRecord(
-                o.getLong("t"),
-                o.getDouble("f"),
-                o.getDouble("p"),
-                o.getDouble("d")
+                id = o.optString("id", UUID.randomUUID().toString()),
+                timestamp = o.getLong("t"),
+                fare = o.getDouble("f"),
+                netProfit = o.getDouble("p"),
+                distance = o.getDouble("d")
             )
         }
     }
 
-    val darkMode: Flow<Boolean?> = context.dataStore.data.map { prefs ->
-        if (prefs.contains(darkKey)) prefs[darkKey].toBoolean() else null
-    }
-
-    val defaults: Flow<Defaults?> = context.dataStore.data.map { prefs ->
-        val m = prefs[mileageKey] ?: return@map null
-        val c = prefs[commKey] ?: return@map null
-        val f = prefs[fuelKey] ?: return@map null
-        Defaults(m, c, f)
-    }
-
-    val goal: Flow<Double?> = context.dataStore.data.map { prefs ->
-        prefs[goalKey]?.toDoubleOrNull()
-    }
-
-    val goalBase: Flow<Double?> = context.dataStore.data.map { prefs ->
-        prefs[goalBaseKey]?.toDoubleOrNull()
+    // Loads everything synchronously-ish — used once at startup
+    suspend fun snap(): Snap {
+        val p = context.dataStore.data.first()
+        return Snap(
+            dark = p[darkKey]?.toBoolean() ?: false,
+            mileage = p[mileageKey] ?: "45",
+            commissionPct = p[commKey] ?: "20",
+            fuelPrice = p[fuelKey] ?: "100",
+            minPerKm = p[minPerKmKey] ?: "8",
+            goal = p[goalKey]?.toDoubleOrNull() ?: 0.0,
+            goalBase = p[goalBaseKey]?.toDoubleOrNull() ?: 0.0
+        )
     }
 
     suspend fun addRecord(r: RideRecord) {
         context.dataStore.edit { prefs ->
             val existing = prefs[key]?.let { JSONArray(it) } ?: JSONArray()
             existing.put(JSONObject().apply {
+                put("id", r.id)
                 put("t", r.timestamp)
                 put("f", r.fare)
                 put("p", r.netProfit)
@@ -80,11 +92,24 @@ class RideRepository(private val context: Context) {
         }
     }
 
-    suspend fun saveDefaults(mileage: String, commission: String, fuel: String) {
+    suspend fun deleteRecord(id: String) {
         context.dataStore.edit { prefs ->
-            prefs[mileageKey] = mileage
-            prefs[commKey] = commission
-            prefs[fuelKey] = fuel
+            val existing = prefs[key]?.let { JSONArray(it) } ?: JSONArray()
+            val next = JSONArray()
+            for (i in 0 until existing.length()) {
+                val o = existing.getJSONObject(i)
+                if (o.optString("id") != id) next.put(o)
+            }
+            prefs[key] = next.toString()
+        }
+    }
+
+    suspend fun saveDefaults(d: Defaults) {
+        context.dataStore.edit { prefs ->
+            prefs[mileageKey] = d.mileage
+            prefs[commKey] = d.commissionPct
+            prefs[fuelKey] = d.fuelPrice
+            prefs[minPerKmKey] = d.minPerKm
         }
     }
 
